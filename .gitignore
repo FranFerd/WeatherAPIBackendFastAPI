@@ -1,6 +1,10 @@
 # Virtual environment
 venv/
 .env/
+env/
+.env
+FastAPI.py
+test.py
 __pycache__/
 *.pyc
 *.pyo
