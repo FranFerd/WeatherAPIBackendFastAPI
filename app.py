@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 
 from Backend.WeatherAPIBackendFastAPI.services.auth_service import authenticate_user, create_access_token, decode_token
-
+from services.weather_service import WeatherService
 
 from models.token import Token, TokenData, WelcomeMessage
 
@@ -30,18 +30,7 @@ load_dotenv()
 
 @app.post("/token", response_model=Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Token: # Parses a form with username, password. Request example: username=franz&password=secret
-    if not form_data.username or not form_data.password:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Missing credentials')
-    
-    if not authenticate_user(form_data.username, form_data.password): # form_data.username = "franz", form_data.password = "secret"
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
-    
-    access_token = create_access_token(
-        data = {"sub": form_data.username},
-        expires_delta=timedelta(minutes=15)
-    )
-    return {"access_token": access_token, "token_type": "bearer"} # token_type: bearer means the client should send the token like Authorization: Bearer <token>
-                                                                  # "bearer" means "anyone who has this token is authorized - no password required" 
+    return WeatherService().login(form_data)
 
 @app.get("/protected", response_model=WelcomeMessage)
 def protected_route(current_user: TokenData = Depends(decode_token)) -> WelcomeMessage:
