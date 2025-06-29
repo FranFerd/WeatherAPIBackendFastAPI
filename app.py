@@ -6,7 +6,7 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 
-from utils.auth import authenticate_user, create_access_token, decode_token
+from Backend.WeatherAPIBackendFastAPI.services.auth_service import authenticate_user, create_access_token, decode_token
 
 
 from models.token import Token, TokenData, WelcomeMessage
