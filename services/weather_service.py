@@ -1,3 +1,4 @@
+import requests
 from fastapi import status, HTTPException
 from datetime import timedelta
 from services.auth_service import authenticate_user, create_access_token
@@ -6,7 +7,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 from models.token import Token
 from configs.app_settings import settings
 from models.address import AddressResponse
-import requests
+from utils.get_weather_data import fetch_weather, refine_weather
+from utils.get_api_params import get_params_check_address, get_params_weather
 class WeatherService:
     def __init__(self):
         self.api_key = settings.API_KEY
@@ -41,22 +43,9 @@ class WeatherService:
             return {"address": cached_address}
         
         url = f'{self.base_url}/{location}'
-        params = {
-            "unitGroup" : "metric",
-            "key" : self.api_key,
-            "include" : "address,resolvedAddress",
-            "elements": "address,resolvedAddress",
-            "content-type" : "json",
-            "locationMode" : "single"
-        }
+        params = get_params_check_address(self.api_key)
 
-        try:
-            response = requests.get(url, params=params)
-            response.raise_for_status() # Raises an error, if occured. Without it, there wouldn't be an error, and except isn't executed
-        except:
-            raise HTTPException(status_code=502, detail="Failed to fetch data from an API") 
-
-        weather_data = response.json()
+        weather_data = fetch_weather(url, params)
         address = weather_data.get('address')
 
         if not address:
@@ -72,27 +61,10 @@ class WeatherService:
             return {"weather_data": cached_weather_hourly}
         
         url = f"{self.base_url}/{location}"
-        params = {
-            "unitGroup" : "metric",
-            "key" : self.api_key,
-            "include" : "hours,resolvedAddress",
-            "elements": "address,datetime,temp,feelslike,conditions,preciptype,icon,windspeed,uvindex,sunrise,sunset",
-            "content-type" : "json",
-            "locationMode" : "single"
-        }
+        params = get_params_weather(self.api_key)
 
-        try:
-            response = requests.get(url, params=params)
-            response.raise_for_status() # Raises an error, if occured. Without it, there wouldn't be an error, and except isn't executed
-        except:
-            raise HTTPException(status_code=502, detail="Failed to fetch data from an API")
-            
-        weather_data_raw = response.json()
-        weather_data_refined = {
-            "address" : weather_data_raw.get("address"),
-            "resolvedAddress" : weather_data_raw.get("resolvedAddress"),
-            "days" : weather_data_raw.get("days", [])[:number_of_days]
-        }
+        weather_data_raw = fetch_weather(url, params)
+        weather_data_refined = refine_weather(weather_data_raw, number_of_days) 
 
         redis_service.set_json(redis_key=redis_key, value=weather_data_refined, time=timedelta(hours=1))
         return {"weather_data": weather_data_refined}                                                        
