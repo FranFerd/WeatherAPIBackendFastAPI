@@ -1,12 +1,15 @@
 from pydantic_settings import BaseSettings
 from datetime import timedelta
 
-class Settings(BaseSettings): # Settings is a central config object that holds values the app needs to run - usually env vars
+class Settings(BaseSettings):
     API_KEY: str
-    JWT_SECRET = str
+    JWT_SECRET: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     BASE_URL: str
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    REDIS_DB: int = 0
 
     class Config: # Tells Pydantic where to look for env vars
         env_file = ".env"
@@ -16,4 +19,4 @@ class Settings(BaseSettings): # Settings is a central config object that holds v
         return timedelta(minutes=self.ACCESS_TOKEN_EXPIRE_MINUTES)
     
 
-settings = Settings()
+settings = Settings() # settings is a central config object that holds values the app needs to run - usually env vars
