@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from datetime import timedelta
+from typing import List
 
 class Settings(BaseSettings):
     API_KEY: str
@@ -10,6 +11,7 @@ class Settings(BaseSettings):
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0
+    ALLOWED_ORIGINS: List[str]
 
     class Config: # Tells Pydantic where to look for env vars
         env_file = ".env"

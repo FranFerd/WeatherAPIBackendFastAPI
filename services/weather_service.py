@@ -1,18 +1,25 @@
 from fastapi import status, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
+
 from datetime import timedelta
+
 from services.auth_service import authenticate_user, create_access_token
 from services.redis_service import redis_service
-from fastapi.security import OAuth2PasswordRequestForm
-from models.token import Token
+
+from schemas.token import Token
+from schemas.address import Address
+from schemas.weather_data import WeatherHourlyResponse
+
 from configs.app_settings import settings
-from models.address import AddressResponse
-import requests
+
+from utils.weather_data import fetch_data, refine_weather
+from utils.api_params import get_params_check_address, get_params_weather
 class WeatherService:
     def __init__(self):
         self.api_key = settings.API_KEY
         self.base_url = settings.BASE_URL
 
-    def login(self, form_data: OAuth2PasswordRequestForm) -> Token:
+    async def login(self, form_data: OAuth2PasswordRequestForm) -> Token:
         """
             Authenticate user and generate a JWT token.
 
@@ -34,67 +41,42 @@ class WeatherService:
         return {"access_token": access_token, "token_type": "bearer"} # token_type: bearer means the client should send the token like Authorization: Bearer <token>
                                                                   # "bearer" means "anyone who has this token is authorized - no password required"
 
-    def check_address(self, location: str) -> AddressResponse:
+    async def check_address(self, location: str) -> Address:
         redis_key = f"checkAddress:{location}"
-        cached_address = redis_service.get_json(redis_key)
-        if cached_address:
+        cached_address = await redis_service.get_cached(redis_key)
+        if cached_address.is_cached == True:
             return {"address": cached_address}
         
         url = f'{self.base_url}/{location}'
-        params = {
-            "unitGroup" : "metric",
-            "key" : self.api_key,
-            "include" : "address,resolvedAddress",
-            "elements": "address,resolvedAddress",
-            "content-type" : "json",
-            "locationMode" : "single"
-        }
+        params = get_params_check_address(self.api_key)
 
-        try:
-            response = requests.get(url, params=params)
-            response.raise_for_status() # Raises an error, if occured. Without it, there wouldn't be an error, and except isn't executed
-        except:
-            raise HTTPException(status_code=502, detail="Failed to fetch data from an API") 
-
-        weather_data = response.json()
-        address = weather_data.get('address')
+        weather_data = await fetch_data(url, params)
+        address = weather_data.address
 
         if not address:
             raise ValueError('Invalid address')
 
-        redis_service.set_json(redis_key=redis_key, value=address, time=timedelta(hours=1))
+        await redis_service.set_json(redis_key=redis_key, value=address, time=timedelta(hours=1))
         return {"address": address}          
 
-    def get_weather_hourly(self, location: str, number_of_days: int):
+    async def get_weather_hourly(self, location: str, number_of_days: int) -> WeatherHourlyResponse:
         redis_key = f"weatherHourly:{location}:{number_of_days}"
-        cached_weather_hourly = redis_service.get_json(redis_key)
-        if cached_weather_hourly:
-            return {"weather_data": cached_weather_hourly}
+        cached_weather_hourly = await redis_service.get_cached(redis_key)
+        if cached_weather_hourly.is_cached == True:
+            return {"weather_data": cached_weather_hourly.data, "is_cached": True}
         
         url = f"{self.base_url}/{location}"
-        params = {
-            "unitGroup" : "metric",
-            "key" : self.api_key,
-            "include" : "hours,resolvedAddress",
-            "elements": "address,datetime,temp,feelslike,conditions,preciptype,icon,windspeed,uvindex,sunrise,sunset",
-            "content-type" : "json",
-            "locationMode" : "single"
-        }
+        params = get_params_weather(self.api_key)
 
-        try:
-            response = requests.get(url, params=params)
-            response.raise_for_status() # Raises an error, if occured. Without it, there wouldn't be an error, and except isn't executed
-        except:
-            raise HTTPException(status_code=502, detail="Failed to fetch data from an API")
-            
-        weather_data_raw = response.json()
-        weather_data_refined = {
-            "address" : weather_data_raw.get("address"),
-            "resolvedAddress" : weather_data_raw.get("resolvedAddress"),
-            "days" : weather_data_raw.get("days", [])[:number_of_days]
-        }
+        weather_data_raw = await fetch_data(url, params)
+        weather_data_refined = refine_weather(weather_data_raw, number_of_days) 
 
-        redis_service.set_json(redis_key=redis_key, value=weather_data_refined, time=timedelta(hours=1))
-        return {"weather_data": weather_data_refined}                                                        
+        await redis_service.set_json(redis_key=redis_key, value=weather_data_refined, time=timedelta(hours=1))
+        return {"weather_data": weather_data_refined, "is_cached": False}   
+
+    def test(self, location):
+        url = f"{self.base_url}/{location}"
+        params = get_params_weather(self.api_key)
+        return fetch_data(url, params)                                                     
 
 weather_service = WeatherService()

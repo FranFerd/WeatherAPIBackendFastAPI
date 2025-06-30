@@ -1,5 +1,4 @@
-import os
-from dotenv import load_dotenv
+from configs.app_settings import settings
 
 from datetime import datetime, timedelta, timezone
 
@@ -7,14 +6,12 @@ from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
-from models.token import TokenData
-from models.user import User
+from schemas.token import TokenData
+from schemas.user import User
 
-load_dotenv()
-
-JWT_SECRET = os.getenv('JWT_SECRET')
-ALGORITHM = os.getenv('ALGORITHM')
-ACCESS_TOKEN_EXPIRES_MINUTES = int(os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES'))
+JWT_SECRET = settings.JWT_SECRET
+ALGORITHM = settings.ALGORITHM
+ACCESS_TOKEN_EXPIRES_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token") # OAuth2PasswordBearer extracts token from Authorization: Bearer
                                                                 # tokeUnrl='token' is the login endpoint that provides the token('/token')
@@ -25,7 +22,7 @@ fake_user: User = {"username": "franz", "password": "secret"}
 def authenticate_user(username: str, password: str) -> bool:
     return username == fake_user["username"] and password == fake_user["password"]
 
-def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str: #data can be {'sub':'franz'}
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str: # data can be {'sub':'franz'}
     to_encode = data.copy() # to prevent modifying original dict, which could cause bugs if it's reused somewhere
     expires_at = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=15))
     to_encode.update({"exp": expires_at})
