@@ -1,6 +1,6 @@
 import requests
 from fastapi import HTTPException
-from models.url_params import Params
+from schemas.url_params import Params
 
 def refine_weather(weather_data_raw, number_of_days: int):
     return {

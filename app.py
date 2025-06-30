@@ -7,7 +7,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from services.auth_service import decode_token
 from services.weather_service import weather_service
 
-from models.token import Token, TokenData, WelcomeMessage
+from schemas.token import Token, TokenData, WelcomeMessage
 
 app = FastAPI(
     title="Weather API",

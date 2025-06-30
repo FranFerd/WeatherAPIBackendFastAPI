@@ -1,4 +1,4 @@
 from pydantic import BaseModel
 
-class AddressResponse(BaseModel):
+class Address(BaseModel):
     address: str

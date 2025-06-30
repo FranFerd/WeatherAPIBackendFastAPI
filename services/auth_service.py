@@ -7,8 +7,8 @@ from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
-from models.token import TokenData
-from models.user import User
+from schemas.token import TokenData
+from schemas.user import User
 
 load_dotenv()
 
