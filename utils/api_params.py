@@ -1,4 +1,6 @@
-def get_params_weather(api_key: str) -> dict:
+from schemas.url_params import Params
+
+def get_params_weather(api_key: str) -> Params:
     return {
         "unitGroup" : "metric",
         "key" : api_key,
@@ -8,12 +10,11 @@ def get_params_weather(api_key: str) -> dict:
         "locationMode" : "single"
     }
 
-def get_params_check_address(api_key: str) -> dict:
+def get_params_check_address(api_key: str) -> Params:
     return {
         "unitGroup" : "metric",
         "key" : api_key,
         "include" : "address,resolvedAddress",
-        "elements": "address,resolvedAddress",
         "contentType" : "json",
         "locationMode" : "single"
         }

@@ -48,3 +48,7 @@ def check_address(location: str):
 @app.get("/weather/hourly/{location}/{number_of_days}")
 def get_weather_hourly(location: str, number_of_days: int):
     return weather_service.get_weather_hourly(location, number_of_days)
+
+@app.get("/test/{location}")
+def test(location):
+    return weather_service.test(location)

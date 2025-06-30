@@ -25,7 +25,7 @@ fake_user: User = {"username": "franz", "password": "secret"}
 def authenticate_user(username: str, password: str) -> bool:
     return username == fake_user["username"] and password == fake_user["password"]
 
-def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str: #data can be {'sub':'franz'}
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str: # data can be {'sub':'franz'}
     to_encode = data.copy() # to prevent modifying original dict, which could cause bugs if it's reused somewhere
     expires_at = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=15))
     to_encode.update({"exp": expires_at})
