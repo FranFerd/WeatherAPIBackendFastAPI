@@ -6,25 +6,24 @@ from services.weather_service import weather_service
 
 from schemas.token import Token, WelcomeMessage, TokenData
 
+router = APIRouter()
 
-weather_router = APIRouter()
+@router.post("/token", response_model=Token)
+async def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Token: # Parses a form with username, password. Request example: username=franz&password=secret
+    return await weather_service.login(form_data)
 
-@weather_router.post("/token", response_model=Token)
-def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Token: # Parses a form with username, password. Request example: username=franz&password=secret
-    return weather_service.login(form_data)
-
-@weather_router.get("/protected", response_model=WelcomeMessage)
-def protected_route(current_user: TokenData = Depends(decode_token)) -> WelcomeMessage:
+@router.get("/protected", response_model=WelcomeMessage)
+async def protected_route(current_user: TokenData = Depends(decode_token)) -> WelcomeMessage:
     return {"message": f"Welcome, {current_user.username}"}
 
-@weather_router.get("/weather/hourly/check-address/{location}")
-def check_address(location: str):
-    return weather_service.check_address(location)
+@router.get("/weather/hourly/check-address/{location}")
+async def check_address(location: str):
+    return await weather_service.check_address(location)
 
-@weather_router.get("/weather/hourly/{location}/{number_of_days}")
-def get_weather_hourly(location: str, number_of_days: int):
-    return weather_service.get_weather_hourly(location, number_of_days)
+@router.get("/weather/hourly/{location}/{number_of_days}")
+async def get_weather_hourly(location: str, number_of_days: int):
+    return await weather_service.get_weather_hourly(location, number_of_days)
 
-@weather_router.get("/test/{location}")
-def test(location):
+@router.get("/test/{location}")
+async def test(location):
     return weather_service.test(location)

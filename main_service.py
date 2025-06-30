@@ -1,7 +1,7 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from api.weather import weather_router
-from configs.app_settings import settings
+from api.weather import router
+from configs.cors_config import add_cors_middleware
+
 class WeatherAppMainService:
     def __init__(self):
         self.app = FastAPI(
@@ -11,16 +11,10 @@ class WeatherAppMainService:
         )
 
     def configure_cors(self) -> None:
-        self.app.add_middleware(
-            CORSMiddleware,
-            allow_origins=settings.ALLOWED_ORIGINS,
-            allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"]
-        )
+        add_cors_middleware(self.app)
     
     def configure_routers(self) -> None:
-        self.app.include_router(weather_router)
+        self.app.include_router(router)
 
     def configure_events(self) -> None:
         @self.app.on_event("startup")

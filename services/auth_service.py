@@ -1,5 +1,4 @@
-import os
-from dotenv import load_dotenv
+from configs.app_settings import settings
 
 from datetime import datetime, timedelta, timezone
 
@@ -10,11 +9,9 @@ from fastapi.security import OAuth2PasswordBearer
 from schemas.token import TokenData
 from schemas.user import User
 
-load_dotenv()
-
-JWT_SECRET = os.getenv('JWT_SECRET')
-ALGORITHM = os.getenv('ALGORITHM')
-ACCESS_TOKEN_EXPIRES_MINUTES = int(os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES'))
+JWT_SECRET = settings.JWT_SECRET
+ALGORITHM = settings.ALGORITHM
+ACCESS_TOKEN_EXPIRES_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token") # OAuth2PasswordBearer extracts token from Authorization: Bearer
                                                                 # tokeUnrl='token' is the login endpoint that provides the token('/token')
