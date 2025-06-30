@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 
 from services.auth_service import authenticate_user, create_access_token, decode_token
+from services.weather_service import weather_service
 
 
 from models.token import Token, TokenData, WelcomeMessage
@@ -37,26 +38,7 @@ load_dotenv()
 
 @app.post("/token", response_model=Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Token: # Parses a form with username, password. Request example: username=franz&password=secret
-    """
-        Authenticate user and generate a JWT token.
-
-        - **username**: user's login name
-        - **password**: user's password
-
-        Returns an access token to be used for authenticated requests.
-    """
-    if not form_data.username or not form_data.password: # Depends calls another function to provide required value. The same as form_data: OAuth2PasswordRequestForm = Depends(OAuth2PasswordRequestForm)
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Missing credentials') # FastAPI automatically 
-    
-    if not authenticate_user(form_data.username, form_data.password): # form_data.username = "franz", form_data.password = "secret"
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
-    
-    access_token = create_access_token(
-        data = {"sub": form_data.username},
-        expires_delta=timedelta(minutes=15)
-    )
-    return {"access_token": access_token, "token_type": "bearer"} # token_type: bearer means the client should send the token like Authorization: Bearer <token>
-                                                                  # "bearer" means "anyone who has this token is authorized - no password required" 
+    return weather_service.login(form_data)
 
 @app.get("/protected", response_model=WelcomeMessage)
 def protected_route(current_user: TokenData = Depends(decode_token)) -> WelcomeMessage:
@@ -68,42 +50,7 @@ BASE_URL = os.getenv("BASE_URL")
 
 @app.get("/weather/hourly/check-address/{location}")
 def check_address(location: str):
-    redis_key = f"checkAddress:{location}"
-    cached_address = redis_client.get(redis_key)
-
-    if cached_address:
-        parsed_address = json.loads(cached_address)
-        return {"address": parsed_address}
-    
-    url = f'{BASE_URL}/{location}'
-    params = {
-        "unitGroup" : "metric",
-        "key" : API_KEY,
-        "include" : "address,resolvedAddress",
-        "elements": "address,resolvedAddress",
-        "content-type" : "json",
-        "locationMode" : "single"
-    }
-
-    try:
-        response = requests.get(url, params=params)
-        response.raise_for_status() # Raises an error, if occured. Without it, there wouldn't be an error, and except isn't executed
-    except:
-        raise HTTPException(status_code=502, detail="Failed to fetch data from an API") 
-
-    weather_data = response.json()
-    address = weather_data.get('address')
-
-    if not address:
-        raise ValueError('Invalid address')
-
-    redis_client.setex(
-        name=redis_key, 
-        time=timedelta(seconds=3600),
-        value=json.dumps(address)
-    )
-
-    return {"address": address}
+    return weather_service.check_address(location)
 
 @app.get("/weather/hourly/{location}/{number_of_days}")
 def get_weather_hourly(location: str, number_of_days: int):

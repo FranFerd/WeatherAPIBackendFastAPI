@@ -3,7 +3,7 @@ from datetime import timedelta
 
 class Settings(BaseSettings):
     API_KEY: str
-    JWT_SECRET = str
+    JWT_SECRET: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     BASE_URL: str

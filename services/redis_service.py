@@ -19,7 +19,7 @@ class RedisService:
                 return None
         return None
 
-    def set_json(self, redis_key: str, time: timedelta, value: str):
+    def set_json(self, redis_key: str, time: timedelta, value: str) -> dict:
         self.client.setex(
             name=redis_key,
             value=json.dumps(value),
