@@ -1,9 +1,15 @@
 import redis.asyncio as redis_async, json
-from configs.app_settings import settings
+
 from datetime import timedelta
+
 from schemas.cached import CachedResponse
+
 from pydantic import BaseModel
+
+from configs.app_settings import settings
+
 from utils.serialize_for_cache import get_serialized_for_cache
+
 class RedisService:
     def __init__(self):
         self.client = redis_async.Redis(
