@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0
     ALLOWED_ORIGINS: List[str]
+    DATABASE_URL='postgresql://postgres:wiecae9du@localhost:5432/postgres'
 
     class Config: # Tells Pydantic where to look for env vars
         env_file = ".env"
