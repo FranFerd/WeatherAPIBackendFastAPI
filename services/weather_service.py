@@ -1,13 +1,7 @@
-from fastapi import status, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
-
 from datetime import timedelta
 
-from services.auth_service import authenticate_user, create_access_token
 from services.redis_service import redis_service
-from services.db_service import DbService
 
-from schemas.token import Token
 from schemas.address import Address
 from schemas.weather_data import WeatherHourlyResponse
 
@@ -15,8 +9,6 @@ from configs.app_settings import settings
 
 from utils.weather_data import fetch_data, refine_weather
 from utils.api_params import get_params_check_address, get_params_weather
-
-from sqlalchemy.orm import Session
 
 class WeatherService:
     def __init__(self):

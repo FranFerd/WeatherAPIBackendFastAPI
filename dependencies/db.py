@@ -1,14 +1,11 @@
 from database import SessionLocal
-from sqlalchemy.orm import Session
-from typing import Generator # Generator is a type hint for describing generator behaviour
+from sqlalchemy.ext.asyncio import AsyncSession
+from typing import AsyncGenerator # Generator is a type hint for describing generator behaviour
                              
-def get_db() -> Generator[Session, None, None]: # get_db is generator - a function that returns values with yield
-    db = SessionLocal()
-    try:
-        yield db # the function passes at yield db and returns the db session to the route handler.
-    finally:  # 'return db' wouldn't work properly. It will open session, run finally (close session) and return the clossed session.
-        db.close() #
-
+async def get_db() -> AsyncGenerator[AsyncSession, None]: # get_db is generator - a function that returns values with yield
+    async with SessionLocal() as session:
+        yield session
+        
 # @router.get("/users")
 # def read_users(db: Session = Depends(get_db)):
 #    users = db.query(User).all()

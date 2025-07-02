@@ -1,4 +1,5 @@
 from pydantic import BaseModel, field_validator
+from datetime import datetime
 
 class UserCredentials(BaseModel):
     username: str
@@ -9,3 +10,9 @@ class UserCredentials(BaseModel):
         if not value or not value.strip():
             raise ValueError('Must not be empty or blank')
         return value
+    
+class UserDb(BaseModel):
+    id: int
+    username: str
+    password_hash: str
+    created_at: datetime
