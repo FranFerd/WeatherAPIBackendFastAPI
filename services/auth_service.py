@@ -7,33 +7,34 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
 from schemas.token import TokenData
-from schemas.user import User
 
-JWT_SECRET = settings.JWT_SECRET
-ALGORITHM = settings.ALGORITHM
-ACCESS_TOKEN_EXPIRES_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
+from services.db_service import DbService
+
+from sqlalchemy.ext.asyncio import AsyncSession
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token") # OAuth2PasswordBearer extracts token from Authorization: Bearer
-                                                                # tokeUnrl='token' is the login endpoint that provides the token('/token')
-                                                                # oath2_scheme tell fastAPI how to extract token from Authorization header
+# tokenUnrl='token' is the login endpoint that provides the token('/token')
+# oath2_scheme tell fastAPI how to extract token from Authorization header
 
-fake_user: User = {"username": "franz", "password": "secret"}
+class AuthService:
+    def __init__(self, db: AsyncSession):
+        self.db = db
 
-def authenticate_user(username: str, password: str) -> bool:
-    return username == fake_user["username"] and password == fake_user["password"]
+    async def authenticate_user(self, username: str, password: str) -> bool:
+        return True
 
-def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str: # data can be {'sub':'franz'}
-    to_encode = data.copy() # to prevent modifying original dict, which could cause bugs if it's reused somewhere
-    expires_at = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=15))
-    to_encode.update({"exp": expires_at})
-    return jwt.encode(to_encode, JWT_SECRET, algorithm=ALGORITHM)
+    def create_access_token(self, data: dict, expires_delta: timedelta | None = None) -> str: # data can be {'sub':'franz'}
+        to_encode = data.copy() # to prevent modifying original dict, which could cause bugs if it's reused somewhere
+        expires_at = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=15))
+        to_encode.update({"exp": expires_at})
+        return jwt.encode(to_encode, settings.JWT_SECRET, algorithm=settings.ALGORITHM)
 
-def decode_token(token: str = Depends(oauth2_scheme)) -> TokenData:
-    try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=ALGORITHM)
-        username: str = payload.get("sub") # subject of the token (username)
-        if username is None:
-            raise HTTPException(status_code=400, detail="Invalid token")
-        return TokenData(username=username)
-    except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
+    def decode_token(self, token: str = Depends(oauth2_scheme)) -> TokenData:
+        try:
+            payload = jwt.decode(token, settings.JWT_SECRET, algorithms=settings.ALGORITHM)
+            username: str = payload.get("sub") # subject of the token (username)
+            if username is None:
+                raise HTTPException(status_code=400, detail="Invalid token")
+            return TokenData(username=username)
+        except JWTError:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
