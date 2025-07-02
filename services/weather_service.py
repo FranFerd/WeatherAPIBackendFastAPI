@@ -74,9 +74,7 @@ class WeatherService:
         await redis_service.set_json(redis_key=redis_key, value=weather_data_refined, time=timedelta(hours=1))
         return {"weather_data": weather_data_refined, "is_cached": False}   
 
-    def test(self, location):
-        url = f"{self.base_url}/{location}"
-        params = get_params_weather(self.api_key)
-        return fetch_data(url, params)                                                     
+    async def sign_up(form_data: OAuth2PasswordRequestForm):
+        pass                                                    
 
 weather_service = WeatherService()
