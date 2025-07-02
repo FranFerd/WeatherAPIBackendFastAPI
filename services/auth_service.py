@@ -7,7 +7,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
 from schemas.token import TokenData
-from schemas.user import User
+from schemas.user import UserCredentials
 
 JWT_SECRET = settings.JWT_SECRET
 ALGORITHM = settings.ALGORITHM
@@ -17,7 +17,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token") # OAuth2PasswordBearer ex
                                                                 # tokeUnrl='token' is the login endpoint that provides the token('/token')
                                                                 # oath2_scheme tell fastAPI how to extract token from Authorization header
 
-fake_user: User = {"username": "franz", "password": "secret"}
+fake_user: UserCredentials = {"username": "franz", "password": "secret"}
 
 def authenticate_user(username: str, password: str) -> bool:
     return username == fake_user["username"] and password == fake_user["password"]

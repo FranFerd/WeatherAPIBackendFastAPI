@@ -1,4 +1,4 @@
-from Backend.WeatherAPIBackendFastAPI.database import SessionLocal
+from database import SessionLocal
 from sqlalchemy.orm import Session
 from typing import Generator # Generator is a type hint for describing generator behaviour
                              
