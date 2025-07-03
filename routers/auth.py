@@ -1,14 +1,15 @@
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
-from services.auth_service import AuthService
 from services.user_service import UserService
 
 from schemas.token import Token, WelcomeMessage, TokenData
 from schemas.user import UserCredentials, UserDb
 
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from dependencies.db import get_db
+from dependencies.decode_token import decode_token
 
 router = APIRouter()
 
@@ -26,6 +27,6 @@ async def login(
 
     return await UserService(db).login(form_data)
 
-# @router.get("/protected", response_model=WelcomeMessage)
-# async def protected_route(current_user: TokenData = Depends(decode_token)) -> WelcomeMessage:
-#     return {"message": f"Welcome, {current_user.username}"}
+@router.get("/protected", response_model=WelcomeMessage)
+async def protected_route(current_user: TokenData = Depends(decode_token)):
+    return {"message": f"Welcome, {current_user.username}"}

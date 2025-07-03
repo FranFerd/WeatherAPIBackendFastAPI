@@ -29,16 +29,6 @@ class AuthService:
         expires_at = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=15))
         to_encode.update({"exp": expires_at})
         return jwt.encode(to_encode, settings.JWT_SECRET, algorithm=settings.ALGORITHM)
-
-    def decode_token(self, token: str = Depends(oauth2_scheme)) -> TokenData:
-        try:
-            payload = jwt.decode(token, settings.JWT_SECRET, algorithms=settings.ALGORITHM)
-            username: str = payload.get("sub") # subject of the token (username)
-            if username is None:
-                raise HTTPException(status_code=400, detail="Invalid token")
-            return TokenData(username=username)
-        except JWTError:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
         
     async def authenticate_user(self, username: str, password: str) -> bool:
         await redis_service.is_blocked(username)

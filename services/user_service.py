@@ -14,7 +14,6 @@ from security.password_hashing import hash_password
 from schemas.token import Token
 from schemas.user import UserCredentials, UserDb
 
-
 class UserService:
     def __init__(self, db: Session):
         self.db_service = DbService(db)
