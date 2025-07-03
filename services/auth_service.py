@@ -2,20 +2,14 @@ from configs.app_settings import settings
 
 from datetime import datetime, timedelta, timezone
 
-from jose import JWTError, jwt
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-
-from schemas.token import TokenData
+from jose import jwt
+from fastapi import HTTPException, status
 
 from services.db_service import DbService
 from services.redis_service import redis_service
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token") # OAuth2PasswordBearer extracts token from Authorization: Bearer
-# tokenUnrl='token' is the login endpoint that provides the token('/token')
-# oath2_scheme tell fastAPI how to extract token from Authorization header
 
 class AuthService:
     def __init__(self, db: AsyncSession):

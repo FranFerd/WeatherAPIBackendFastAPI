@@ -1,4 +1,5 @@
 import redis.asyncio as redis_async, json
+from fastapi import HTTPException, status
 
 from datetime import timedelta
 
@@ -10,7 +11,6 @@ from configs.app_settings import settings
 
 from utils.serialize_for_cache import get_serialized_for_cache
 
-from fastapi import HTTPException, status
 
 class RedisService:
     MAX_ATTEMPTS = 5

@@ -3,11 +3,10 @@ from datetime import timedelta
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi import HTTPException, status
 
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from services.db_service import DbService
 from services.auth_service import AuthService
-from services.redis_service import redis_service
 
 from security.password_hashing import hash_password
 
@@ -15,7 +14,7 @@ from schemas.token import Token
 from schemas.user import UserCredentials, UserDb
 
 class UserService:
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.db_service = DbService(db)
         self.auth_service = AuthService(db)
     async def sign_up(self, user_credentials: UserCredentials) -> UserDb:
@@ -29,15 +28,6 @@ class UserService:
         return await self.db_service.add_user(user_credentials.username, hashed_password)
     
     async def login(self, form_data: OAuth2PasswordRequestForm) -> Token:
-        """
-            Authenticate user and generate a JWT token.
-
-            - **username**: user's login name
-            - **password**: user's password
-
-            Returns an access token to be used for authenticated requests.
-        """
-
         if not form_data.username or not form_data.password:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Missing credentials')
         

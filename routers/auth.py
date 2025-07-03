@@ -20,7 +20,7 @@ async def signup(
 
     return await UserService(db).sign_up(user_credentials)
 
-@router.post("/login", response_model=Token)
+@router.post("/token", response_model=Token)
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db)) -> Token: # Parses a form with username, password. Request example: username=franz&password=secret

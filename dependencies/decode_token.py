@@ -7,6 +7,9 @@ from configs.app_settings import settings
 from schemas.token import TokenData
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+# OAuth2PasswordBearer extracts token from Authorization: Bearer
+# tokenUnrl='token' is the login endpoint that provides the token('/token')
+# oath2_scheme tell fastAPI how to extract token from Authorization header
 
 def decode_token(token: str = Depends(oauth2_scheme)) -> TokenData:
     try:

@@ -1,7 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+
 from models.user import User
-from security.password_hashing import hash_password, verify_password
+
+from security.password_hashing import verify_password
 
 class DbService:
     def __init__(self, db: AsyncSession):
