@@ -9,6 +9,7 @@ from fastapi.security import OAuth2PasswordBearer
 from schemas.token import TokenData
 
 from services.db_service import DbService
+from services.redis_service import redis_service
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,9 +20,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token") # OAuth2PasswordBearer ex
 class AuthService:
     def __init__(self, db: AsyncSession):
         self.db = db
-
-    async def authenticate_user(self, username: str, password: str) -> bool:
-        return True
+        self.db_service = DbService(db)
+    async def is_correct_credentials(self, username: str, password: str) -> bool:
+        return await self.db_service.authenticate_user(username, password)
 
     def create_access_token(self, data: dict, expires_delta: timedelta | None = None) -> str: # data can be {'sub':'franz'}
         to_encode = data.copy() # to prevent modifying original dict, which could cause bugs if it's reused somewhere
@@ -38,3 +39,15 @@ class AuthService:
             return TokenData(username=username)
         except JWTError:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
+        
+    async def authenticate_user(self, username: str, password: str) -> bool:
+        await redis_service.is_blocked(username)
+
+        is_authenticated = await self.is_correct_credentials(username, password)
+
+        if not is_authenticated:
+            await redis_service.register_failed_attempt(username)
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
+        
+        await redis_service.reset_attempts(username)
+        return True

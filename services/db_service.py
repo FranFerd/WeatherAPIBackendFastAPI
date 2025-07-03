@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from models.user import User
-from security.password_hashing import hash_password
+from security.password_hashing import hash_password, verify_password
 
 class DbService:
     def __init__(self, db: AsyncSession):
@@ -23,12 +23,15 @@ class DbService:
 
         return new_user
     
-    async def authenticate_user(self, username: str, password: str):
-        hashed_password = hash_password(password)
+    async def authenticate_user(self, username: str, password: str) -> bool:
         result = await self.db.execute(
-            select(User)
+            select(User.password_hash)
             .filter(User.username == username)
-            .filter(User.password_hash == hashed_password)
         )
-        user = result.scalars().first()
-        return user is not None
+        hashed_password = result.scalar_one_or_none()
+
+        if hashed_password is None: 
+            return False
+        
+        is_valid_password = verify_password(password, hashed_password)
+        return is_valid_password
