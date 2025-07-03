@@ -1,8 +1,12 @@
 from fastapi import FastAPI
+
 from routers.weather import router as weather_router
 from routers.auth import router as auth_router
+
 from configs.cors_config import add_cors_middleware
+
 from contextlib import asynccontextmanager
+
 from database import create_tables
 
 class WeatherAppMainService:
