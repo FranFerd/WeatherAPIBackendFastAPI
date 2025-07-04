@@ -1,6 +1,6 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
+from jose import JWTError, jwt, ExpiredSignatureError
 
 from configs.app_settings import settings
 
@@ -18,5 +18,7 @@ def decode_token(token: str = Depends(oauth2_scheme)) -> TokenData:
         if username is None:
             raise HTTPException(status_code=400, detail="Invalid token")
         return TokenData(username=username)
+    except ExpiredSignatureError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Expired token")
     except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
